@@ -2,7 +2,7 @@
 
 | Bintray | Windows | Linux & macOS |
 |:--------:|:---------:|:-----------------:|
-|[ ![Download](https://api.bintray.com/packages/notskm/public-conan/sfml%3Anotskm/images/download.svg?version=2.5.0%3Astable) ](https://bintray.com/notskm/public-conan/sfml%3Anotskm/2.5.0%3Astable/link)|[![Build status](https://ci.appveyor.com/api/projects/status/6cganetvfbk8kr39?svg=true)](https://ci.appveyor.com/project/notskm/conan-sfml)|[![Build Status](https://travis-ci.org/notskm/conan-sfml.svg?branch=stable%2F2.5.0)](https://travis-ci.org/notskm/conan-sfml)|
+|[![Download](https://api.bintray.com/packages/bincrafters/public-conan/sfml%3Abincrafters/images/download.svg)](https://bintray.com/bincrafters/public-conan/sfml%3Abincrafters/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/github/bincrafters/conan-sfml?svg=true)](https://ci.appveyor.com/project/BinCrafters/conan-sfml)|[![Build Status](https://travis-ci.org/bincrafters/conan-sfml.svg)](https://travis-ci.org/bincrafters/conan-sfml)|
 
 ## Conan.io Information
 

@@ -36,7 +36,7 @@ class SfmlConan(ConanFile):
     def config_options(self):
         if self.settings.os == 'Windows':
             del self.options.fPIC
-    
+
     def configure(self):
         if self.options.graphics:
             self.options.window = True
@@ -50,7 +50,7 @@ class SfmlConan(ConanFile):
                 self.requires.add('flac/1.3.2@bincrafters/stable')
                 self.requires.add('ogg/1.3.3@bincrafters/stable')
                 self.requires.add('vorbis/1.3.6@bincrafters/stable')
-    
+
     def system_requirements(self):
         if self.settings.os == 'Linux' and tools.os_info.is_linux:
             if tools.os_info.with_apt:
@@ -72,8 +72,7 @@ class SfmlConan(ConanFile):
                     installer.install(package)
 
     def source(self):
-        source_url = 'https://github.com/SFML/SFML'
-        tools.get('{0}/archive/{1}.tar.gz'.format(source_url, self.version))
+        tools.get('{0}/archive/{1}.tar.gz'.format(self.homepage, self.version))
         extracted_dir = 'SFML-' + self.version
         os.rename(extracted_dir, self.source_subfolder)
         tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFLAC.cmake',
@@ -118,12 +117,12 @@ class SfmlConan(ConanFile):
         else:
             cmake = self.configure_cmake()
         cmake.build()
-    
+
     def package(self):
         self.copy(pattern='License.md', dst='licenses', src=self.source_subfolder)
         cmake = self.configure_cmake()
         cmake.install()
-    
+
     def add_libraries_from_pc(self, library, static=None):
         if static is None:
             static = not self.options.shared
