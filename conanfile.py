@@ -122,6 +122,14 @@ class SfmlConan(ConanFile):
         self.copy(pattern='License.md', dst='licenses', src=self.source_subfolder)
         cmake = self.configure_cmake()
         cmake.install()
+        if self.settings.os == 'Macos' and self.options.shared and self.options.graphics:
+            with tools.chdir(os.path.join(self.package_folder, 'lib')):
+                graphics_library = 'libsfml-graphics.%s.dylib' % self.version
+                old_path = '@rpath/../Frameworks/freetype.framework/Versions/A/freetype'
+                new_path = '@loader_path/../freetype.framework/Versions/A/freetype'
+                command = 'install_name_tool -change %s %s %s' % (old_path, new_path, graphics_library)
+                self.output.warn(command)
+                self.run(command)
 
     def add_libraries_from_pc(self, library, static=None):
         if static is None:
