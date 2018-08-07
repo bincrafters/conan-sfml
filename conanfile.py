@@ -94,17 +94,6 @@ class SfmlConan(ConanFile):
             if self.settings.compiler.runtime == 'MT' or self.settings.compiler.runtime == 'MTd':
                 cmake.definitions['SFML_USE_STATIC_STD_LIBS'] = True
 
-        if self.settings.os == 'Linux':
-            library_prefix_paths = ''
-            if self.options.graphics:
-                library_prefix_paths += self.deps_cpp_info['freetype'].rootpath + ';'
-            if self.options.audio:
-                library_prefix_paths += self.deps_cpp_info['flac'].rootpath + ';'
-                library_prefix_paths += self.deps_cpp_info['vorbis'].rootpath + ';'
-                library_prefix_paths += self.deps_cpp_info['ogg'].rootpath + ';'
-                library_prefix_paths += self.deps_cpp_info['openal'].rootpath + ';'
-            cmake.definitions['CMAKE_PREFIX_PATH'] = library_prefix_paths
-
         if self.settings.os != 'Windows':
             cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
         cmake.configure(build_folder=self.build_subfolder)
