@@ -107,7 +107,7 @@ class SfmlConan(ConanFile):
 
         if self.settings.os != 'Windows':
             cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
-        cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
+        cmake.configure(build_folder=self.build_subfolder)
         return cmake
 
     def build(self):
