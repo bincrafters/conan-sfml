@@ -165,18 +165,9 @@ class SfmlConan(ConanFile):
 
         if not self.options.shared:
             if self.settings.os == 'Windows':
-                if self.options.graphics:
-                    self.cpp_info.libs.append('freetype')
                 if self.options.window:
                     self.cpp_info.libs.append('opengl32')
                     self.cpp_info.libs.append('gdi32')
-                if self.options.audio:
-                    self.cpp_info.libs.append('openal32')
-                    self.cpp_info.libs.append('flac')
-                    self.cpp_info.libs.append('vorbisenc')
-                    self.cpp_info.libs.append('vorbisfile')
-                    self.cpp_info.libs.append('vorbis')
-                    self.cpp_info.libs.append('ogg')
                 if self.options.network:
                     self.cpp_info.libs.append('ws2_32')
                 self.cpp_info.libs.append('winmm')
