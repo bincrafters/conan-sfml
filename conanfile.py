@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from conans import ConanFile, CMake, tools
-import os
+import os, shutil
 
 
 class SfmlConan(ConanFile):
@@ -83,6 +83,7 @@ class SfmlConan(ConanFile):
             tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
         else:
             tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS}')
+        shutil.rmtree(os.path.join(self.source_subfolder, 'extlibs'))
 
     def configure_cmake(self):
         cmake = CMake(self, generator='Ninja')
@@ -113,8 +114,14 @@ class SfmlConan(ConanFile):
 
     def package(self):
         self.copy(pattern='License.md', dst='licenses', src=self.source_subfolder)
-        cmake = self.configure_cmake()
-        cmake.install()
+        include_folder = os.path.join(self.source_subfolder, "include")
+        self.copy(pattern="*", dst="include", src=include_folder)
+        self.copy(pattern="*.dll", dst="bin", keep_path=False)
+        self.copy(pattern="*.lib", dst="lib", keep_path=False)
+        self.copy(pattern="*.a", dst="lib", keep_path=False)
+        self.copy(pattern="*.so*", dst="lib", keep_path=False)
+        self.copy(pattern="*.dylib", dst="lib", keep_path=False)
+
         if self.settings.os == 'Macos' and self.options.shared and self.options.graphics:
             with tools.chdir(os.path.join(self.package_folder, 'lib')):
                 suffix = '-d' if self.settings.build_type == 'Debug' else ''
