@@ -78,6 +78,11 @@ class SfmlConan(ConanFile):
                             'find_library(FLAC_LIBRARY NAMES FLAC)',
                             'find_library(FLAC_LIBRARY NAMES flac)')
         tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype', 'libfreetype\n    freetyped')
+        tools.replace_in_file(self.source_subfolder + '/src/SFML/Graphics/CMakeLists.txt', 'PRIVATE Freetype', 'PRIVATE ${CONAN_LIBS}')
+        if self.settings.os == 'Macos':
+            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
+        else:
+            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS}')
 
     def configure_cmake(self):
         cmake = CMake(self, generator='Ninja')
