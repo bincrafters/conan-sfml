@@ -84,6 +84,17 @@ class SfmlConan(ConanFile):
             tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
         else:
             tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS}')
+        # https://github.com/SFML/SFML/issues/1436
+        tools.replace_in_file(self.source_subfolder + '/CMakeLists.txt',
+                              'if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)\n'
+                              '    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7" CACHE STRING "macOS deployement target; '
+                              '10.7+ is expected" FORCE)\n'
+                              'endif()', '')
+        tools.replace_in_file(self.source_subfolder + '/CMakeLists.txt',
+                              '    if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "10.7")\n'
+                              '        message(FATAL_ERROR "macOS 10.7 or greater is required for the deployment '
+                              'target.")\n'
+                              '    endif()', '')
 
     def configure_cmake(self):
         cmake = CMake(self, generator='Ninja')
