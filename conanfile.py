@@ -42,14 +42,14 @@ class SfmlConan(ConanFile):
             self.options.window = True
 
     def requirements(self):
-        if self.settings.os == 'Linux':
-            if self.options.graphics:
-                self.requires.add('freetype/2.9.0@bincrafters/stable')
-            if self.options.audio:
-                self.requires.add('openal/1.18.2@bincrafters/stable')
-                self.requires.add('flac/1.3.2@bincrafters/stable')
-                self.requires.add('ogg/1.3.3@bincrafters/stable')
-                self.requires.add('vorbis/1.3.6@bincrafters/stable')
+        if self.options.graphics:
+            self.requires.add('freetype/2.9.0@bincrafters/stable')
+            self.requires.add('stb/20180214@conan/stable')
+        if self.options.audio:
+            self.requires.add('openal/1.18.2@bincrafters/stable')
+            self.requires.add('flac/1.3.2@bincrafters/stable')
+            self.requires.add('ogg/1.3.3@bincrafters/stable')
+            self.requires.add('vorbis/1.3.6@bincrafters/stable')
 
     def system_requirements(self):
         if self.settings.os == 'Linux' and tools.os_info.is_linux:
@@ -76,9 +76,29 @@ class SfmlConan(ConanFile):
         extracted_dir = 'SFML-' + self.version
         os.rename(extracted_dir, self.source_subfolder)
         tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFLAC.cmake',
-                            'find_library(FLAC_LIBRARY NAMES FLAC)',
-                            'find_library(FLAC_LIBRARY NAMES flac)')
-        tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype', 'libfreetype\n    freetyped')
+                              'find_library(FLAC_LIBRARY NAMES FLAC)',
+                              'find_library(FLAC_LIBRARY NAMES flac)')
+        tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype',
+                              'libfreetype\n    freetyped')
+        tools.replace_in_file(self.source_subfolder + '/src/SFML/Graphics/CMakeLists.txt', 'PRIVATE Freetype',
+                              'PRIVATE ${CONAN_LIBS}')
+        if self.settings.os == 'Macos':
+            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
+                                  'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
+        else:
+            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
+                                  'PRIVATE ${CONAN_LIBS}')
+        # https://github.com/SFML/SFML/issues/1436
+        tools.replace_in_file(self.source_subfolder + '/CMakeLists.txt',
+                              'if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)\n'
+                              '    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7" CACHE STRING "macOS deployement target; '
+                              '10.7+ is expected" FORCE)\n'
+                              'endif()', '')
+        tools.replace_in_file(self.source_subfolder + '/CMakeLists.txt',
+                              '    if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "10.7")\n'
+                              '        message(FATAL_ERROR "macOS 10.7 or greater is required for the deployment '
+                              'target.")\n'
+                              '    endif()', '')
 
     def configure_cmake(self):
         cmake = CMake(self, generator='Ninja')
@@ -90,24 +110,16 @@ class SfmlConan(ConanFile):
         cmake.definitions['SFML_BUILD_NETWORK'] = self.options.network
         cmake.definitions['SFML_BUILD_AUDIO'] = self.options.audio
 
-        if self.settings.os == 'Windows':
+        if self.settings.compiler == 'Visual Studio':
             if self.settings.compiler.runtime == 'MT' or self.settings.compiler.runtime == 'MTd':
                 cmake.definitions['SFML_USE_STATIC_STD_LIBS'] = True
 
-        if self.settings.os == 'Linux':
-            library_prefix_paths = ''
-            if self.options.graphics:
-                library_prefix_paths += self.deps_cpp_info['freetype'].rootpath + ';'
-            if self.options.audio:
-                library_prefix_paths += self.deps_cpp_info['flac'].rootpath + ';'
-                library_prefix_paths += self.deps_cpp_info['vorbis'].rootpath + ';'
-                library_prefix_paths += self.deps_cpp_info['ogg'].rootpath + ';'
-                library_prefix_paths += self.deps_cpp_info['openal'].rootpath + ';'
-            cmake.definitions['CMAKE_PREFIX_PATH'] = library_prefix_paths
-
         if self.settings.os != 'Windows':
             cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
-        cmake.configure(build_folder=self.build_subfolder, source_folder=self.source_subfolder)
+
+        os.rename(self.source_subfolder + '/extlibs', self.source_subfolder + '/ext')
+        cmake.configure(build_folder=self.build_subfolder)
+        os.rename(self.source_subfolder + '/ext', self.source_subfolder + '/extlibs')
         return cmake
 
     def build(self):
@@ -122,6 +134,15 @@ class SfmlConan(ConanFile):
         self.copy(pattern='License.md', dst='licenses', src=self.source_subfolder)
         cmake = self.configure_cmake()
         cmake.install()
+        if self.settings.os == 'Macos' and self.options.shared and self.options.graphics:
+            with tools.chdir(os.path.join(self.package_folder, 'lib')):
+                suffix = '-d' if self.settings.build_type == 'Debug' else ''
+                graphics_library = 'libsfml-graphics%s.%s.dylib' % (suffix, self.version)
+                old_path = '@rpath/../Frameworks/freetype.framework/Versions/A/freetype'
+                new_path = '@loader_path/../freetype.framework/Versions/A/freetype'
+                command = 'install_name_tool -change %s %s %s' % (old_path, new_path, graphics_library)
+                self.output.warn(command)
+                self.run(command)
 
     def add_libraries_from_pc(self, library, static=None):
         if static is None:
@@ -155,18 +176,9 @@ class SfmlConan(ConanFile):
 
         if not self.options.shared:
             if self.settings.os == 'Windows':
-                if self.options.graphics:
-                    self.cpp_info.libs.append('freetype')
                 if self.options.window:
                     self.cpp_info.libs.append('opengl32')
                     self.cpp_info.libs.append('gdi32')
-                if self.options.audio:
-                    self.cpp_info.libs.append('openal32')
-                    self.cpp_info.libs.append('flac')
-                    self.cpp_info.libs.append('vorbisenc')
-                    self.cpp_info.libs.append('vorbisfile')
-                    self.cpp_info.libs.append('vorbis')
-                    self.cpp_info.libs.append('ogg')
                 if self.options.network:
                     self.cpp_info.libs.append('ws2_32')
                 self.cpp_info.libs.append('winmm')
@@ -176,3 +188,10 @@ class SfmlConan(ConanFile):
                 if self.options.graphics:
                     self.cpp_info.libs.append('GL')
                     self.cpp_info.libs.append('udev')
+            elif self.settings.os == "Macos":
+                frameworks = []
+                if self.options.window:
+                    frameworks.extend(['Cocoa', 'IOKit', 'Carbon', 'OpenGL'])
+                for framework in frameworks:
+                    self.cpp_info.exelinkflags.append("-framework %s" % framework)
+                self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
