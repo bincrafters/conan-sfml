@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from conans import ConanFile, CMake, tools
-import os, shutil
+import os
 
 
 class SfmlConan(ConanFile):
@@ -76,14 +76,18 @@ class SfmlConan(ConanFile):
         extracted_dir = 'SFML-' + self.version
         os.rename(extracted_dir, self.source_subfolder)
         tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFLAC.cmake',
-                            'find_library(FLAC_LIBRARY NAMES FLAC)',
-                            'find_library(FLAC_LIBRARY NAMES flac)')
-        tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype', 'libfreetype\n    freetyped')
-        tools.replace_in_file(self.source_subfolder + '/src/SFML/Graphics/CMakeLists.txt', 'PRIVATE Freetype', 'PRIVATE ${CONAN_LIBS}')
+                              'find_library(FLAC_LIBRARY NAMES FLAC)',
+                              'find_library(FLAC_LIBRARY NAMES flac)')
+        tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype',
+                              'libfreetype\n    freetyped')
+        tools.replace_in_file(self.source_subfolder + '/src/SFML/Graphics/CMakeLists.txt', 'PRIVATE Freetype',
+                              'PRIVATE ${CONAN_LIBS}')
         if self.settings.os == 'Macos':
-            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
+            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
+                                  'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
         else:
-            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL', 'PRIVATE ${CONAN_LIBS}')
+            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
+                                  'PRIVATE ${CONAN_LIBS}')
         # https://github.com/SFML/SFML/issues/1436
         tools.replace_in_file(self.source_subfolder + '/CMakeLists.txt',
                               'if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)\n'
