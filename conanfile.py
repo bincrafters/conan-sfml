@@ -106,7 +106,7 @@ class SfmlConan(ConanFile):
         cmake.definitions['SFML_BUILD_NETWORK'] = self.options.network
         cmake.definitions['SFML_BUILD_AUDIO'] = self.options.audio
 
-        if self.settings.os == 'Windows':
+        if self.settings.compiler == 'Visual Studio':
             if self.settings.compiler.runtime == 'MT' or self.settings.compiler.runtime == 'MTd':
                 cmake.definitions['SFML_USE_STATIC_STD_LIBS'] = True
 
