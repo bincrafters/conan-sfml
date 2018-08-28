@@ -101,7 +101,7 @@ class SfmlConan(ConanFile):
                               '    endif()', '')
 
     def configure_cmake(self):
-        cmake = CMake(self, generator='Ninja')
+        cmake = CMake(self)
         cmake.definitions['SFML_DEPENDENCIES_INSTALL_PREFIX'] = self.package_folder
         cmake.definitions['SFML_MISC_INSTALL_PREFIX'] = self.package_folder
 
