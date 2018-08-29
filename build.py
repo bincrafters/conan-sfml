@@ -23,7 +23,7 @@ def add_required_installers(build):
 
 if __name__ == "__main__":
 
-    builder = build_template_default.get_builder()
+    builder = build_template_default.get_builder(pure_c=False)
 
     for build in builder.items:
         build.options['sfml:window'] = False
