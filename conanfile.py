@@ -7,18 +7,15 @@ import os
 
 class SfmlConan(ConanFile):
     name = 'sfml'
-    version = '2.5.0'
+    version = '2.5.1'
     description = 'Simple and Fast Multimedia Library'
     url = 'https://github.com/bincrafters/conan-sfml'
     homepage = 'https://github.com/SFML/SFML'
     author = 'Bincrafters <bincrafters@gmail.com>'
-    license = 'zlib/png'
-
+    license = "ZLIB"
     exports = ['LICENSE.md']
-
     exports_sources = ['CMakeLists.txt']
     generators = 'cmake'
-
     settings = 'os', 'compiler', 'build_type', 'arch'
     options = {
         'shared': [True, False],
@@ -28,14 +25,20 @@ class SfmlConan(ConanFile):
         'network': [True, False],
         'audio': [True, False],
     }
-    default_options = 'shared=False', 'fPIC=True', 'window=False', 'graphics=False', 'network=False', 'audio=False'
-
-    source_subfolder = 'source_subfolder'
-    build_subfolder = 'build_subfolder'
+    default_options = {
+        'shared': False,
+        'fPIC': True,
+        'window': False,
+        'graphics': False,
+        'network': False,
+        'audio': False
+    }
+    _source_subfolder = 'source_subfolder'
+    _build_subfolder = 'build_subfolder'
 
     def config_options(self):
         if self.settings.os == 'Windows':
-            del self.options.fPIC
+            self.options.remove('fPIC')
 
     def configure(self):
         if self.options.graphics:
@@ -74,27 +77,27 @@ class SfmlConan(ConanFile):
     def source(self):
         tools.get('{0}/archive/{1}.tar.gz'.format(self.homepage, self.version))
         extracted_dir = 'SFML-' + self.version
-        os.rename(extracted_dir, self.source_subfolder)
-        tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFLAC.cmake',
+        os.rename(extracted_dir, self._source_subfolder)
+        tools.replace_in_file(self._source_subfolder + '/cmake/Modules/FindFLAC.cmake',
                               'find_library(FLAC_LIBRARY NAMES FLAC)',
                               'find_library(FLAC_LIBRARY NAMES flac)')
-        tools.replace_in_file(self.source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype',
+        tools.replace_in_file(self._source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype',
                               'libfreetype\n    freetyped')
-        tools.replace_in_file(self.source_subfolder + '/src/SFML/Graphics/CMakeLists.txt', 'PRIVATE Freetype',
+        tools.replace_in_file(self._source_subfolder + '/src/SFML/Graphics/CMakeLists.txt', 'PRIVATE Freetype',
                               'PRIVATE ${CONAN_LIBS}')
         if self.settings.os == 'Macos':
-            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
+            tools.replace_in_file(self._source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
                                   'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
         else:
-            tools.replace_in_file(self.source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
+            tools.replace_in_file(self._source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
                                   'PRIVATE ${CONAN_LIBS}')
         # https://github.com/SFML/SFML/issues/1436
-        tools.replace_in_file(self.source_subfolder + '/CMakeLists.txt',
+        tools.replace_in_file(self._source_subfolder + '/CMakeLists.txt',
                               'if(NOT CMAKE_OSX_DEPLOYMENT_TARGET)\n'
                               '    set(CMAKE_OSX_DEPLOYMENT_TARGET "10.7" CACHE STRING "macOS deployement target; '
                               '10.7+ is expected" FORCE)\n'
                               'endif()', '')
-        tools.replace_in_file(self.source_subfolder + '/CMakeLists.txt',
+        tools.replace_in_file(self._source_subfolder + '/CMakeLists.txt',
                               '    if(CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS "10.7")\n'
                               '        message(FATAL_ERROR "macOS 10.7 or greater is required for the deployment '
                               'target.")\n'
@@ -117,9 +120,9 @@ class SfmlConan(ConanFile):
         if self.settings.os != 'Windows':
             cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
 
-        os.rename(self.source_subfolder + '/extlibs', self.source_subfolder + '/ext')
-        cmake.configure(build_folder=self.build_subfolder)
-        os.rename(self.source_subfolder + '/ext', self.source_subfolder + '/extlibs')
+        os.rename(self._source_subfolder + '/extlibs', self._source_subfolder + '/ext')
+        cmake.configure(build_folder=self._build_subfolder)
+        os.rename(self._source_subfolder + '/ext', self._source_subfolder + '/extlibs')
         return cmake
 
     def build(self):
@@ -131,7 +134,7 @@ class SfmlConan(ConanFile):
         cmake.build()
 
     def package(self):
-        self.copy(pattern='License.md', dst='licenses', src=self.source_subfolder)
+        self.copy(pattern='License.md', dst='licenses', src=self._source_subfolder)
         cmake = self.configure_cmake()
         cmake.install()
         if self.settings.os == 'Macos' and self.options.shared and self.options.graphics:
