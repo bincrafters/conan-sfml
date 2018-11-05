@@ -60,7 +60,7 @@ matrix:
         env: CONAN_APPLE_CLANG_VERSIONS=9.1
       - <<: *osx
         osx_image: xcode10
-        env: CONAN_APPLE_CLANG_VERSIONS=10.0
+        env: CONAN_APPLE_CLANG_VERSIONS=10.0 CONAN_BUILD_POLICY=missing
 
 install:
   - chmod +x .ci/install.sh
