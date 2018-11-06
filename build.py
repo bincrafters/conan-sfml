@@ -5,14 +5,6 @@
 from bincrafters import build_template_default
 import copy
 
-def is_not_bad_build(build):
-    if build.options['sfml:graphics'] or build.options['sfml:audio']:
-        if build.settings['compiler'] == 'gcc' and build.settings['compiler.version'] == '8':
-            return False
-        if build.settings['compiler'] == 'clang' and build.settings['compiler.version'] == '6.0':
-            return False
-    return True
-
 def add_build_requires(builds):
     return map(add_required_installers, builds)
 
@@ -40,7 +32,4 @@ if __name__ == "__main__":
     
     builder.items = add_build_requires(builder.items)
     
-    # Some dependencies don't have gcc-8 or clang-6.0 binaries, so some SFML libs fail to build
-    builder.builds = filter(is_not_bad_build, builder.items)
-
 builder.run()
