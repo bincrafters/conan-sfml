@@ -9,6 +9,7 @@ class SfmlConan(ConanFile):
     name = 'sfml'
     version = '2.5.1'
     description = 'Simple and Fast Multimedia Library'
+    topics = ('conan', 'sfml', 'multimedia')
     url = 'https://github.com/bincrafters/conan-sfml'
     homepage = 'https://github.com/SFML/SFML'
     author = 'Bincrafters <bincrafters@gmail.com>'
@@ -75,7 +76,8 @@ class SfmlConan(ConanFile):
                     installer.install(package)
 
     def source(self):
-        tools.get('{0}/archive/{1}.tar.gz'.format(self.homepage, self.version))
+        sha256 = "438c91a917cc8aa19e82c6f59f8714da353c488584a007d401efac8368e1c785"
+        tools.get('{0}/archive/{1}.tar.gz'.format(self.homepage, self.version), sha256=sha256)
         extracted_dir = 'SFML-' + self.version
         os.rename(extracted_dir, self._source_subfolder)
         tools.replace_in_file(self._source_subfolder + '/cmake/Modules/FindFLAC.cmake',
@@ -92,7 +94,7 @@ class SfmlConan(ConanFile):
             tools.replace_in_file(self._source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
                                   'PRIVATE ${CONAN_LIBS}')
 
-    def configure_cmake(self):
+    def _configure_cmake(self):
         cmake = CMake(self)
         cmake.definitions['SFML_DEPENDENCIES_INSTALL_PREFIX'] = self.package_folder
         cmake.definitions['SFML_MISC_INSTALL_PREFIX'] = self.package_folder
@@ -106,9 +108,6 @@ class SfmlConan(ConanFile):
             if self.settings.compiler.runtime == 'MT' or self.settings.compiler.runtime == 'MTd':
                 cmake.definitions['SFML_USE_STATIC_STD_LIBS'] = True
 
-        if self.settings.os != 'Windows':
-            cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = self.options.fPIC
-
         os.rename(self._source_subfolder + '/extlibs', self._source_subfolder + '/ext')
         cmake.configure(build_folder=self._build_subfolder)
         os.rename(self._source_subfolder + '/ext', self._source_subfolder + '/extlibs')
@@ -117,14 +116,14 @@ class SfmlConan(ConanFile):
     def build(self):
         if self.settings.compiler == 'Visual Studio':
             with tools.vcvars(self.settings, force=True, filter_known_paths=False):
-                cmake = self.configure_cmake()
+                cmake = self._configure_cmake()
         else:
-            cmake = self.configure_cmake()
+            cmake = self._configure_cmake()
         cmake.build()
 
     def package(self):
         self.copy(pattern='License.md', dst='licenses', src=self._source_subfolder)
-        cmake = self.configure_cmake()
+        cmake = self._configure_cmake()
         cmake.install()
         if self.settings.os == 'Macos' and self.options.shared and self.options.graphics:
             with tools.chdir(os.path.join(self.package_folder, 'lib')):
