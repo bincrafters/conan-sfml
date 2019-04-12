@@ -51,9 +51,6 @@ matrix:
       - <<: *linux
         env: CONAN_CLANG_VERSIONS=7.0 CONAN_DOCKER_IMAGE=conanio/clang7 CONAN_ARCHS=x86_64
       - <<: *osx
-        osx_image: xcode7.3
-        env: CONAN_APPLE_CLANG_VERSIONS=7.3
-      - <<: *osx
         osx_image: xcode8.3
         env: CONAN_APPLE_CLANG_VERSIONS=8.1
       - <<: *osx
@@ -64,7 +61,7 @@ matrix:
         env: CONAN_APPLE_CLANG_VERSIONS=9.1
       - <<: *osx
         osx_image: xcode10
-        env: CONAN_APPLE_CLANG_VERSIONS=10.0 CONAN_BUILD_POLICY=missing
+        env: CONAN_APPLE_CLANG_VERSIONS=10.0
 
 install:
   - chmod +x .ci/install.sh
