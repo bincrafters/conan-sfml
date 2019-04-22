@@ -185,4 +185,5 @@ class SfmlConan(ConanFile):
                     frameworks.extend(['Cocoa', 'IOKit', 'Carbon', 'OpenGL'])
                 for framework in frameworks:
                     self.cpp_info.exelinkflags.append("-framework %s" % framework)
+                self.cpp_info.exelinkflags.append("-ObjC")
                 self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
