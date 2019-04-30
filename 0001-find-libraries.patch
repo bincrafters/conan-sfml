@@ -49,16 +49,3 @@ index 883c758..efa2e98 100644
 
  # add preprocessor symbols
  target_compile_definitions(sfml-graphics PRIVATE "STBI_FAILURE_USERMSG")
-diff --git a/src/SFML/Window/CMakeLists.txt b/src/SFML/Window/CMakeLists.txt
-index 98ea439..4aa3f0f 100644
---- a/src/SFML/Window/CMakeLists.txt
-+++ b/src/SFML/Window/CMakeLists.txt
-@@ -231,7 +231,7 @@ target_link_libraries(sfml-window PUBLIC sfml-system)
-
- # When static linking on macOS, we need to add this flag for objective C to work
- if ((NOT BUILD_SHARED_LIBS) AND SFML_OS_MACOSX)
--    target_link_libraries(sfml-window PRIVATE -ObjC)
-+    target_compile_options(sfml-window PRIVATE -ObjC)
- endif()
-
- # find and setup usage for external libraries
