@@ -15,7 +15,7 @@ class SfmlConan(ConanFile):
     author = 'Bincrafters <bincrafters@gmail.com>'
     license = "ZLIB"
     exports = ['LICENSE.md']
-    exports_sources = ['CMakeLists.txt']
+    exports_sources = ['CMakeLists.txt', '0001-find-libraries.patch']
     generators = 'cmake'
     settings = 'os', 'compiler', 'build_type', 'arch'
     options = {
@@ -50,7 +50,7 @@ class SfmlConan(ConanFile):
             self.requires.add('freetype/2.9.0@bincrafters/stable')
             self.requires.add('stb/20180214@conan/stable')
         if self.options.audio:
-            self.requires.add('openal/1.18.2@bincrafters/stable')
+            self.requires.add('openal/1.19.0@bincrafters/stable')
             self.requires.add('flac/1.3.2@bincrafters/stable')
             self.requires.add('ogg/1.3.3@bincrafters/stable')
             self.requires.add('vorbis/1.3.6@bincrafters/stable')
@@ -80,40 +80,30 @@ class SfmlConan(ConanFile):
         tools.get('{0}/archive/{1}.tar.gz'.format(self.homepage, self.version), sha256=sha256)
         extracted_dir = 'SFML-' + self.version
         os.rename(extracted_dir, self._source_subfolder)
-        tools.replace_in_file(self._source_subfolder + '/cmake/Modules/FindFLAC.cmake',
-                              'find_library(FLAC_LIBRARY NAMES FLAC)',
-                              'find_library(FLAC_LIBRARY NAMES flac)')
-        tools.replace_in_file(self._source_subfolder + '/cmake/Modules/FindFreetype.cmake', 'libfreetype',
-                              'libfreetype\n    freetyped')
-        tools.replace_in_file(self._source_subfolder + '/src/SFML/Graphics/CMakeLists.txt', 'PRIVATE Freetype',
-                              'PRIVATE ${CONAN_LIBS}')
-        if self.settings.os == 'Macos':
-            tools.replace_in_file(self._source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
-                                  'PRIVATE ${CONAN_LIBS} "-framework AudioUnit"')
-        else:
-            tools.replace_in_file(self._source_subfolder + '/src/SFML/Audio/CMakeLists.txt', 'PRIVATE OpenAL',
-                                  'PRIVATE ${CONAN_LIBS}')
 
     def _configure_cmake(self):
         cmake = CMake(self)
         cmake.definitions['SFML_DEPENDENCIES_INSTALL_PREFIX'] = self.package_folder
         cmake.definitions['SFML_MISC_INSTALL_PREFIX'] = self.package_folder
-
         cmake.definitions['SFML_BUILD_WINDOW'] = self.options.window
         cmake.definitions['SFML_BUILD_GRAPHICS'] = self.options.graphics
         cmake.definitions['SFML_BUILD_NETWORK'] = self.options.network
         cmake.definitions['SFML_BUILD_AUDIO'] = self.options.audio
-
-        if self.settings.compiler == 'Visual Studio':
+        if self.settings.os == "Macos":
+            cmake.definitions['SFML_OSX_FRAMEWORK'] = "-framework AudioUnit"
+        elif self.settings.compiler == 'Visual Studio':
             if self.settings.compiler.runtime == 'MT' or self.settings.compiler.runtime == 'MTd':
                 cmake.definitions['SFML_USE_STATIC_STD_LIBS'] = True
 
-        os.rename(self._source_subfolder + '/extlibs', self._source_subfolder + '/ext')
+        extlibs_folder = os.path.join(self._source_subfolder, 'extlibs')
+        ext_folder = os.path.join(self._source_subfolder, 'ext')
+        os.rename(extlibs_folder, ext_folder)
         cmake.configure(build_folder=self._build_subfolder)
-        os.rename(self._source_subfolder + '/ext', self._source_subfolder + '/extlibs')
+        os.rename(ext_folder, extlibs_folder)
         return cmake
 
     def build(self):
+        tools.patch(self._source_subfolder, patch_file="0001-find-libraries.patch")
         if self.settings.compiler == 'Visual Studio':
             with tools.vcvars(self.settings, force=True, filter_known_paths=False):
                 cmake = self._configure_cmake()
@@ -122,7 +112,7 @@ class SfmlConan(ConanFile):
         cmake.build()
 
     def package(self):
-        self.copy(pattern='License.md', dst='licenses', src=self._source_subfolder)
+        self.copy(pattern='license.md', dst='licenses', src=self._source_subfolder)
         cmake = self._configure_cmake()
         cmake.install()
         if self.settings.os == 'Macos' and self.options.shared and self.options.graphics:
