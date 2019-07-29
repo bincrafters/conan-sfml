@@ -25,6 +25,7 @@ class SfmlConan(ConanFile):
         'graphics': [True, False],
         'network': [True, False],
         'audio': [True, False],
+        'framework': [True, False]
     }
     default_options = {
         'shared': False,
@@ -32,14 +33,17 @@ class SfmlConan(ConanFile):
         'window': False,
         'graphics': False,
         'network': False,
-        'audio': False
+        'audio': False,
+        'framework': False
     }
     _source_subfolder = 'source_subfolder'
     _build_subfolder = 'build_subfolder'
 
     def config_options(self):
         if self.settings.os == 'Windows':
-            self.options.remove('fPIC')
+            del self.options.fPIC
+        if self.settings.os != 'Macos':
+            del self.options.framework
 
     def configure(self):
         if self.options.graphics:
@@ -91,6 +95,7 @@ class SfmlConan(ConanFile):
         cmake.definitions['SFML_BUILD_AUDIO'] = self.options.audio
         if self.settings.os == "Macos":
             cmake.definitions['SFML_OSX_FRAMEWORK'] = "-framework AudioUnit"
+            cmake.definitions['SFML_BUILD_FRAMEWORKS'] = self.options.framework
         elif self.settings.compiler == 'Visual Studio':
             if self.settings.compiler.runtime == 'MT' or self.settings.compiler.runtime == 'MTd':
                 cmake.definitions['SFML_USE_STATIC_STD_LIBS'] = True
@@ -143,17 +148,20 @@ class SfmlConan(ConanFile):
         suffix += '-d' if self.settings.build_type == 'Debug' else ''
         sfml_main_suffix = '-d' if self.settings.build_type == 'Debug' else ''
 
-        if self.options.graphics:
-            self.cpp_info.libs.append('sfml-graphics' + suffix)
-        if self.options.window:
-            self.cpp_info.libs.append('sfml-window' + suffix)
-        if self.options.network:
-            self.cpp_info.libs.append('sfml-network' + suffix)
-        if self.options.audio:
-            self.cpp_info.libs.append('sfml-audio' + suffix)
-        if self.settings.os == 'Windows':
-            self.cpp_info.libs.append('sfml-main' + sfml_main_suffix)
-        self.cpp_info.libs.append('sfml-system' + suffix)
+        use_framework = self.settings.os == "Macos" and self.options.framework
+
+        if not use_framework:
+            if self.options.graphics:
+                self.cpp_info.libs.append('sfml-graphics' + suffix)
+            if self.options.window:
+                self.cpp_info.libs.append('sfml-window' + suffix)
+            if self.options.network:
+                self.cpp_info.libs.append('sfml-network' + suffix)
+            if self.options.audio:
+                self.cpp_info.libs.append('sfml-audio' + suffix)
+            if self.settings.os == 'Windows':
+                self.cpp_info.libs.append('sfml-main' + sfml_main_suffix)
+            self.cpp_info.libs.append('sfml-system' + suffix)
 
         if not self.options.shared:
             if self.settings.os == 'Windows':
@@ -177,3 +185,6 @@ class SfmlConan(ConanFile):
                     self.cpp_info.exelinkflags.append("-framework %s" % framework)
                 self.cpp_info.exelinkflags.append("-ObjC")
                 self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
+        if use_framework:
+            self.cpp_info.frameworks.extend(["SFML", "sfml-system"])
+            self.cpp_info.includedirs = []
