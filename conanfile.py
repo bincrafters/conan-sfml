@@ -3,6 +3,7 @@
 
 from conans import ConanFile, CMake, tools
 import os
+import shutil
 
 
 class SfmlConan(ConanFile):
@@ -130,6 +131,11 @@ class SfmlConan(ConanFile):
                 command = 'install_name_tool -change %s %s %s' % (old_path, new_path, graphics_library)
                 self.output.warn(command)
                 self.run(command)
+        if tools.is_apple_os(self.settings.os) and self.options.framework:
+            with tools.chdir(self.package_folder):
+                os.mkdir("Frameworks")
+                shutil.move("SFML.framework", "Frameworks")
+                shutil.move("sfml-system.framework", "Frameworks")
 
     def add_libraries_from_pc(self, library, static=None):
         if static is None:
