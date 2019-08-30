@@ -40,5 +40,6 @@ int main()
         listener.isBlocking();
     #endif
 
+    printf("SFML version: %d.%d.%d\n", SFML_VERSION_MAJOR, SFML_VERSION_MINOR, SFML_VERSION_PATCH);
     return EXIT_SUCCESS;
 }
