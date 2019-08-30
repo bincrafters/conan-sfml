@@ -42,7 +42,7 @@ class SfmlConan(ConanFile):
     def config_options(self):
         if self.settings.os == 'Windows':
             del self.options.fPIC
-        if self.settings.os != 'Macos':
+        if not tools.is_apple_os(self.settings.os):
             del self.options.framework
 
     def configure(self):
@@ -95,6 +95,7 @@ class SfmlConan(ConanFile):
         cmake.definitions['SFML_BUILD_AUDIO'] = self.options.audio
         if self.settings.os == "Macos":
             cmake.definitions['SFML_OSX_FRAMEWORK'] = "-framework AudioUnit"
+        if tools.is_apple_os(self.settings.os):
             cmake.definitions['SFML_BUILD_FRAMEWORKS'] = self.options.framework
         elif self.settings.compiler == 'Visual Studio':
             if self.settings.compiler.runtime == 'MT' or self.settings.compiler.runtime == 'MTd':
@@ -148,7 +149,7 @@ class SfmlConan(ConanFile):
         suffix += '-d' if self.settings.build_type == 'Debug' else ''
         sfml_main_suffix = '-d' if self.settings.build_type == 'Debug' else ''
 
-        use_framework = self.settings.os == "Macos" and self.options.framework
+        use_framework = tools.is_apple_os(self.settings.os) and self.options.framework
 
         if not use_framework:
             if self.options.graphics:
