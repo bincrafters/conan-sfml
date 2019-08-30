@@ -7,7 +7,7 @@ import os
 
 class TestPackageConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    generators = "cmake"
+    generators = "cmake", "xcode"
 
     def build(self):
         cmake = CMake(self)
@@ -17,6 +17,10 @@ class TestPackageConan(ConanFile):
         cmake.definitions['WITH_NETWORK'] = self.options['sfml'].network
         cmake.configure()
         cmake.build()
+        if tools.is_apple_os(self.settings.os):
+            xcodeproj = os.path.join(self.source_folder, "conan-sfml-test", "conan-sfml-test.xcodeproj")
+            xcconfig = os.path.join(self.build_folder, "conanbuildinfo.xcconfig")
+            self.run('xcodebuild -configuration conanbuildinfo -xcconfig "%s" -project "%s"' % (xcconfig, xcodeproj))
 
     def test(self):
         bin_path = os.path.join("bin", "test_package")
