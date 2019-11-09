@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from conans import ConanFile, CMake, tools
 import os
 
@@ -12,7 +9,6 @@ class SfmlConan(ConanFile):
     topics = ('conan', 'sfml', 'multimedia')
     url = 'https://github.com/bincrafters/conan-sfml'
     homepage = 'https://github.com/SFML/SFML'
-    author = 'Bincrafters <bincrafters@gmail.com>'
     license = "ZLIB"
     exports = ['LICENSE.md']
     exports_sources = ['CMakeLists.txt', '0001-find-libraries.patch']
