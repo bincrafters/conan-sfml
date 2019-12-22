@@ -10,7 +10,6 @@ class SfmlConan(ConanFile):
     url = 'https://github.com/bincrafters/conan-sfml'
     homepage = 'https://github.com/SFML/SFML'
     license = "ZLIB"
-    exports = ['LICENSE.md']
     exports_sources = ['CMakeLists.txt', '0001-find-libraries.patch']
     generators = 'cmake'
     settings = 'os', 'compiler', 'build_type', 'arch'
