@@ -49,26 +49,27 @@ class SfmlConan(ConanFile):
             self.requires.add('flac/1.3.2@bincrafters/stable')
             self.requires.add('ogg/1.3.4')
             self.requires.add('vorbis/1.3.6@bincrafters/stable')
+        if self.options.window:
+            if self.settings.os == 'Linux':
+                self.requires('libx11/1.6.8@bincrafters/stable')
+                self.requires('libxrandr/1.5.2@bincrafters/stable')
+                self.requires('mesa/19.3.1@bincrafters/stable')
 
     def system_requirements(self):
         if self.settings.os == 'Linux' and tools.os_info.is_linux:
             if tools.os_info.with_apt:
                 installer = tools.SystemPackageTool()
-                if self.settings.arch == 'x86':
-                    arch_suffix = ':i386'
-                elif self.settings.arch == 'x86_64':
-                    arch_suffix = ':amd64'
-
-                packages = ['pkg-config%s' % arch_suffix]
-
+                packages = []
                 if self.options.window:
-                    packages.extend(['libx11-dev%s' % arch_suffix])
-                    packages.extend(['libxrandr-dev%s' % arch_suffix])
-                    packages.extend(['libudev-dev%s' % arch_suffix])
-                    packages.extend(['libgl1-mesa-dev%s' % arch_suffix])
+                    packages.extend(['libudev-dev'])
 
                 for package in packages:
                     installer.install(package)
+    
+    def build_requirements(self):
+        if self.settings.os == 'Linux':
+            if not tools.which('pkg-config'):
+                self.build_requires('pkg-config_installer/0.29.2@bincrafters/stable')
 
     def source(self):
         sha256 = "438c91a917cc8aa19e82c6f59f8714da353c488584a007d401efac8368e1c785"
@@ -99,10 +100,8 @@ class SfmlConan(ConanFile):
 
     def build(self):
         tools.patch(self._source_subfolder, patch_file="0001-find-libraries.patch")
-        if self.settings.compiler == 'Visual Studio':
-            with tools.vcvars(self.settings, force=True, filter_known_paths=False):
-                cmake = self._configure_cmake()
-        else:
+        
+        with tools.vcvars(self.settings, force=True, filter_known_paths=False) if self.settings.compiler == 'Visual Studio' else tools.no_op():
             cmake = self._configure_cmake()
         cmake.build()
 
@@ -119,17 +118,6 @@ class SfmlConan(ConanFile):
                 command = 'install_name_tool -change %s %s %s' % (old_path, new_path, graphics_library)
                 self.output.warn(command)
                 self.run(command)
-
-    def add_libraries_from_pc(self, library, static=None):
-        if static is None:
-            static = not self.options.shared
-        pkg_config = tools.PkgConfig(library, static=static)
-        libs = [lib[2:] for lib in pkg_config.libs_only_l]  # cut -l prefix
-        lib_paths = [lib[2:] for lib in pkg_config.libs_only_L]  # cut -L prefix
-        self.cpp_info.libs.extend(libs)
-        self.cpp_info.libdirs.extend(lib_paths)
-        self.cpp_info.sharedlinkflags.extend(pkg_config.libs_only_other)
-        self.cpp_info.exelinkflags.extend(pkg_config.libs_only_other)
 
     def package_info(self):
         self.cpp_info.defines = ['SFML_STATIC'] if not self.options.shared else []
@@ -159,8 +147,6 @@ class SfmlConan(ConanFile):
                     self.cpp_info.libs.append('ws2_32')
                 self.cpp_info.libs.append('winmm')
             elif self.settings.os == 'Linux':
-                if self.options.window:
-                    self.add_libraries_from_pc('xrandr')
                 if self.options.graphics:
                     self.cpp_info.libs.append('GL')
                     self.cpp_info.libs.append('udev')
