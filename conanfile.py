@@ -24,10 +24,10 @@ class SfmlConan(ConanFile):
     default_options = {
         'shared': False,
         'fPIC': True,
-        'window': False,
-        'graphics': False,
-        'network': False,
-        'audio': False
+        'window': True,
+        'graphics': True,
+        'network': True,
+        'audio': True
     }
     _source_subfolder = 'source_subfolder'
     _build_subfolder = 'build_subfolder'
