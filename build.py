@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+# TODO: Remove build_requires and custom option stuff from this file
 
 from bincrafters import build_template_default
 import copy
@@ -8,7 +9,7 @@ def add_build_requires(builds):
     return map(add_required_installers, builds)
 
 def add_required_installers(build):
-    installers = ['ninja_installer/1.8.2@bincrafters/stable']
+    installers = ['ninja/1.9.0']
     build.build_requires.update({"*": installers})
     return build
 
