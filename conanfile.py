@@ -48,7 +48,7 @@ class SfmlConan(ConanFile):
             self.requires.add('openal/1.19.1')
             self.requires.add('flac/1.3.2@bincrafters/stable')
             self.requires.add('ogg/1.3.4')
-            self.requires.add('vorbis/1.3.6@bincrafters/stable')
+            self.requires.add('vorbis/1.3.6')
         if self.options.window:
             if self.settings.os == 'Linux':
                 self.requires('libx11/1.6.8@bincrafters/stable')
