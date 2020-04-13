@@ -53,7 +53,7 @@ class SfmlConan(ConanFile):
             if self.settings.os == 'Linux':
                 self.requires('libx11/1.6.8@bincrafters/stable')
                 self.requires('libxrandr/1.5.2@bincrafters/stable')
-                self.requires('mesa/19.3.1@bincrafters/stable')
+            self.requires('opengl/virtual@bincrafters/stable')
 
     def system_requirements(self):
         if self.settings.os == 'Linux' and tools.os_info.is_linux:
@@ -141,19 +141,17 @@ class SfmlConan(ConanFile):
         if not self.options.shared:
             if self.settings.os == 'Windows':
                 if self.options.window:
-                    self.cpp_info.libs.append('opengl32')
                     self.cpp_info.libs.append('gdi32')
                 if self.options.network:
                     self.cpp_info.libs.append('ws2_32')
                 self.cpp_info.libs.append('winmm')
             elif self.settings.os == 'Linux':
                 if self.options.graphics:
-                    self.cpp_info.libs.append('GL')
                     self.cpp_info.libs.append('udev')
             elif self.settings.os == "Macos":
                 frameworks = []
                 if self.options.window:
-                    frameworks.extend(['Cocoa', 'IOKit', 'Carbon', 'OpenGL'])
+                    frameworks.extend(['Cocoa', 'IOKit', 'Carbon'])
                 for framework in frameworks:
                     self.cpp_info.exelinkflags.append("-framework %s" % framework)
                 self.cpp_info.exelinkflags.append("-ObjC")
