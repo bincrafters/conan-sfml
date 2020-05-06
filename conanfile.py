@@ -141,18 +141,16 @@ class SfmlConan(ConanFile):
         if not self.options.shared:
             if self.settings.os == 'Windows':
                 if self.options.window:
-                    self.cpp_info.libs.append('gdi32')
+                    self.cpp_info.system_libs.append('gdi32')
                 if self.options.network:
-                    self.cpp_info.libs.append('ws2_32')
-                self.cpp_info.libs.append('winmm')
+                    self.cpp_info.system_libs.append('ws2_32')
+                self.cpp_info.system_libs.append('winmm')
             elif self.settings.os == 'Linux':
+                self.cpp_info.system_libs.append('pthread')
                 if self.options.graphics:
-                    self.cpp_info.libs.append('udev')
+                    self.cpp_info.system_libs.append('udev')
             elif self.settings.os == "Macos":
-                frameworks = []
                 if self.options.window:
-                    frameworks.extend(['Cocoa', 'IOKit', 'Carbon'])
-                for framework in frameworks:
-                    self.cpp_info.exelinkflags.append("-framework %s" % framework)
+                    self.cpp_info.frameworks.extend(['Cocoa', 'IOKit', 'Carbon'])
                 self.cpp_info.exelinkflags.append("-ObjC")
                 self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
