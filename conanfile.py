@@ -4,13 +4,12 @@ import os
 
 class SfmlConan(ConanFile):
     name = 'sfml'
-    version = '2.5.1'
     description = 'Simple and Fast Multimedia Library'
     topics = ('conan', 'sfml', 'multimedia')
     url = 'https://github.com/bincrafters/conan-sfml'
     homepage = 'https://github.com/SFML/SFML'
     license = "ZLIB"
-    exports_sources = ['CMakeLists.txt', '0001-find-libraries.patch']
+    exports_sources = ['CMakeLists.txt', 'patches/*']
     generators = 'cmake'
     settings = 'os', 'compiler', 'build_type', 'arch'
     options = {
@@ -72,8 +71,7 @@ class SfmlConan(ConanFile):
                 self.build_requires('pkg-config_installer/0.29.2@bincrafters/stable')
 
     def source(self):
-        sha256 = "438c91a917cc8aa19e82c6f59f8714da353c488584a007d401efac8368e1c785"
-        tools.get('{0}/archive/{1}.tar.gz'.format(self.homepage, self.version), sha256=sha256)
+        tools.get(**self.conan_data["sources"][self.version])
         extracted_dir = 'SFML-' + self.version
         os.rename(extracted_dir, self._source_subfolder)
 
@@ -99,7 +97,8 @@ class SfmlConan(ConanFile):
         return cmake
 
     def build(self):
-        tools.patch(self._source_subfolder, patch_file="0001-find-libraries.patch")
+        for p in self.conan_data["patches"][self.version]:
+            tools.patch(**p)
         
         with tools.vcvars(self.settings, force=True, filter_known_paths=False) if self.settings.compiler == 'Visual Studio' else tools.no_op():
             cmake = self._configure_cmake()
