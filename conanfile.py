@@ -4,13 +4,12 @@ import os
 
 class SfmlConan(ConanFile):
     name = 'sfml'
-    version = '2.5.1'
     description = 'Simple and Fast Multimedia Library'
     topics = ('conan', 'sfml', 'multimedia')
     url = 'https://github.com/bincrafters/conan-sfml'
     homepage = 'https://github.com/SFML/SFML'
     license = "ZLIB"
-    exports_sources = ['CMakeLists.txt', '0001-find-libraries.patch']
+    exports_sources = ['CMakeLists.txt', 'patches/*']
     generators = 'cmake'
     settings = 'os', 'compiler', 'build_type', 'arch'
     options = {
@@ -24,10 +23,10 @@ class SfmlConan(ConanFile):
     default_options = {
         'shared': False,
         'fPIC': True,
-        'window': False,
-        'graphics': False,
-        'network': False,
-        'audio': False
+        'window': True,
+        'graphics': True,
+        'network': True,
+        'audio': True
     }
     _source_subfolder = 'source_subfolder'
     _build_subfolder = 'build_subfolder'
@@ -43,36 +42,36 @@ class SfmlConan(ConanFile):
     def requirements(self):
         if self.options.graphics:
             self.requires.add('freetype/2.10.1')
-            self.requires.add('stb/20180214@conan/stable')
+            self.requires.add('stb/20200203')
         if self.options.audio:
             self.requires.add('openal/1.19.1')
-            self.requires.add('flac/1.3.2@bincrafters/stable')
+            self.requires.add('flac/1.3.3')
             self.requires.add('ogg/1.3.4')
-            self.requires.add('vorbis/1.3.6@bincrafters/stable')
+            self.requires.add('vorbis/1.3.6')
+        if self.options.window:
+            if self.settings.os == 'Linux':
+                self.requires('libx11/1.6.8@bincrafters/stable')
+                self.requires('libxrandr/1.5.2@bincrafters/stable')
+            self.requires('opengl/virtual@bincrafters/stable')
 
     def system_requirements(self):
         if self.settings.os == 'Linux' and tools.os_info.is_linux:
             if tools.os_info.with_apt:
                 installer = tools.SystemPackageTool()
-                if self.settings.arch == 'x86':
-                    arch_suffix = ':i386'
-                elif self.settings.arch == 'x86_64':
-                    arch_suffix = ':amd64'
-
-                packages = ['pkg-config%s' % arch_suffix]
-
+                packages = []
                 if self.options.window:
-                    packages.extend(['libx11-dev%s' % arch_suffix])
-                    packages.extend(['libxrandr-dev%s' % arch_suffix])
-                    packages.extend(['libudev-dev%s' % arch_suffix])
-                    packages.extend(['libgl1-mesa-dev%s' % arch_suffix])
+                    packages.extend(['libudev-dev'])
 
                 for package in packages:
                     installer.install(package)
+    
+    def build_requirements(self):
+        if self.settings.os == 'Linux':
+            if not tools.which('pkg-config'):
+                self.build_requires('pkg-config_installer/0.29.2@bincrafters/stable')
 
     def source(self):
-        sha256 = "438c91a917cc8aa19e82c6f59f8714da353c488584a007d401efac8368e1c785"
-        tools.get('{0}/archive/{1}.tar.gz'.format(self.homepage, self.version), sha256=sha256)
+        tools.get(**self.conan_data["sources"][self.version])
         extracted_dir = 'SFML-' + self.version
         os.rename(extracted_dir, self._source_subfolder)
 
@@ -98,11 +97,10 @@ class SfmlConan(ConanFile):
         return cmake
 
     def build(self):
-        tools.patch(self._source_subfolder, patch_file="0001-find-libraries.patch")
-        if self.settings.compiler == 'Visual Studio':
-            with tools.vcvars(self.settings, force=True, filter_known_paths=False):
-                cmake = self._configure_cmake()
-        else:
+        for p in self.conan_data["patches"][self.version]:
+            tools.patch(**p)
+        
+        with tools.vcvars(self.settings, force=True, filter_known_paths=False) if self.settings.compiler == 'Visual Studio' else tools.no_op():
             cmake = self._configure_cmake()
         cmake.build()
 
@@ -119,17 +117,6 @@ class SfmlConan(ConanFile):
                 command = 'install_name_tool -change %s %s %s' % (old_path, new_path, graphics_library)
                 self.output.warn(command)
                 self.run(command)
-
-    def add_libraries_from_pc(self, library, static=None):
-        if static is None:
-            static = not self.options.shared
-        pkg_config = tools.PkgConfig(library, static=static)
-        libs = [lib[2:] for lib in pkg_config.libs_only_l]  # cut -l prefix
-        lib_paths = [lib[2:] for lib in pkg_config.libs_only_L]  # cut -L prefix
-        self.cpp_info.libs.extend(libs)
-        self.cpp_info.libdirs.extend(lib_paths)
-        self.cpp_info.sharedlinkflags.extend(pkg_config.libs_only_other)
-        self.cpp_info.exelinkflags.extend(pkg_config.libs_only_other)
 
     def package_info(self):
         self.cpp_info.defines = ['SFML_STATIC'] if not self.options.shared else []
@@ -153,22 +140,16 @@ class SfmlConan(ConanFile):
         if not self.options.shared:
             if self.settings.os == 'Windows':
                 if self.options.window:
-                    self.cpp_info.libs.append('opengl32')
-                    self.cpp_info.libs.append('gdi32')
+                    self.cpp_info.system_libs.append('gdi32')
                 if self.options.network:
-                    self.cpp_info.libs.append('ws2_32')
-                self.cpp_info.libs.append('winmm')
+                    self.cpp_info.system_libs.append('ws2_32')
+                self.cpp_info.system_libs.append('winmm')
             elif self.settings.os == 'Linux':
-                if self.options.window:
-                    self.add_libraries_from_pc('xrandr')
+                self.cpp_info.system_libs.append('pthread')
                 if self.options.graphics:
-                    self.cpp_info.libs.append('GL')
-                    self.cpp_info.libs.append('udev')
+                    self.cpp_info.system_libs.append('udev')
             elif self.settings.os == "Macos":
-                frameworks = []
                 if self.options.window:
-                    frameworks.extend(['Cocoa', 'IOKit', 'Carbon', 'OpenGL'])
-                for framework in frameworks:
-                    self.cpp_info.exelinkflags.append("-framework %s" % framework)
+                    self.cpp_info.frameworks.extend(['Cocoa', 'IOKit', 'Carbon'])
                 self.cpp_info.exelinkflags.append("-ObjC")
                 self.cpp_info.sharedlinkflags = self.cpp_info.exelinkflags
