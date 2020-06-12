@@ -52,7 +52,7 @@ class SfmlConan(ConanFile):
             if self.settings.os == 'Linux':
                 self.requires('libx11/1.6.8@bincrafters/stable')
                 self.requires('libxrandr/1.5.2@bincrafters/stable')
-            self.requires('opengl/virtual@bincrafters/stable')
+            self.requires('opengl/system')
 
     def system_requirements(self):
         if self.settings.os == 'Linux' and tools.os_info.is_linux:
