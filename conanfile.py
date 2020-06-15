@@ -50,8 +50,7 @@ class SfmlConan(ConanFile):
             self.requires.add('vorbis/1.3.6')
         if self.options.window:
             if self.settings.os == 'Linux':
-                self.requires('libx11/1.6.8@bincrafters/stable')
-                self.requires('libxrandr/1.5.2@bincrafters/stable')
+                self.requires('xorg/system')
             self.requires('opengl/system')
 
     def system_requirements(self):
