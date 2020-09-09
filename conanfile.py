@@ -41,13 +41,13 @@ class SfmlConan(ConanFile):
 
     def requirements(self):
         if self.options.graphics:
-            self.requires.add('freetype/2.10.2')
-            self.requires.add('stb/20200203')
+            self.requires('freetype/2.10.2')
+            self.requires('stb/20200203')
         if self.options.audio:
-            self.requires.add('openal/1.19.1')
-            self.requires.add('flac/1.3.3')
-            self.requires.add('ogg/1.3.4')
-            self.requires.add('vorbis/1.3.7')
+            self.requires('openal/1.19.1')
+            self.requires('flac/1.3.3')
+            self.requires('ogg/1.3.4')
+            self.requires('vorbis/1.3.7')
         if self.options.window:
             if self.settings.os == 'Linux':
                 self.requires('xorg/system')
