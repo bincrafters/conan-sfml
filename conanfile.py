@@ -67,7 +67,7 @@ class SfmlConan(ConanFile):
     def build_requirements(self):
         if self.settings.os == 'Linux':
             if not tools.which('pkg-config'):
-                self.build_requires('pkg-config_installer/0.29.2@bincrafters/stable')
+                self.build_requires('pkgconf/1.7.3')
 
     def source(self):
         tools.get(**self.conan_data["sources"][self.version])
