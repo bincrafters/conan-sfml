@@ -41,7 +41,7 @@ class SfmlConan(ConanFile):
 
     def requirements(self):
         if self.options.graphics:
-            self.requires('freetype/2.10.2')
+            self.requires('freetype/2.10.4')
             self.requires('stb/20200203')
         if self.options.audio:
             self.requires('openal/1.19.1')
