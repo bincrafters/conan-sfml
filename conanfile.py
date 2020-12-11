@@ -44,7 +44,7 @@ class SfmlConan(ConanFile):
             self.requires('freetype/2.10.4')
             self.requires('stb/20200203')
         if self.options.audio:
-            self.requires('openal/1.19.1')
+            self.requires('openal/1.21.0')
             self.requires('flac/1.3.3')
             self.requires('ogg/1.3.4')
             self.requires('vorbis/1.3.7')
